@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  sztu-assoction-server-server:
+    image: sztu/assoction-server:stable
+    container_name: sztu-assoction-server
+    pull_policy: always
+    restart: always
+    env_file:
+      - .env
+      - .env.production
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    ports:
+      - '${APP_PORT}:${APP_PORT}'
+    networks:
+      - sztu-assoction-server_net
+
+networks:
+  sztu-assoction-server_net:
+    name: sztu-assoction-server_net

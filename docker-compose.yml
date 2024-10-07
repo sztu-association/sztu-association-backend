@@ -1,0 +1,65 @@
+version: '3'
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: sztu-assoction-server-mysql
+    restart: always
+    env_file:
+      - .env
+      - .env.production
+    environment:
+      - MYSQL_HOST=${DB_HOST}
+      - MYSQL_PORT=${DB_PORT}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USERNAME=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+    ports:
+      - '${DB_PORT}:3306'
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
+    volumes:
+      - ./__data/mysql/:/var/lib/mysql/
+      - ./deploy/sql/:/docker-entrypoint-initdb.d/
+    networks:
+      - sztu-assoction-server_net
+
+  redis:
+    image: redis:alpine
+    container_name: sztu-assoction-server-redis
+    restart: always
+    env_file:
+      - .env
+      - .env.production
+    ports:
+      - '${REDIS_PORT}:6379'
+    command: >
+      --requirepass ${REDIS_PASSWORD}
+    networks:
+      - sztu-assoction-server_net
+
+  sztu-assoction-server:
+    build:
+      context: .
+      args:
+        - PROJECT_DIR=${PROJECT_DIR}
+    container_name: sztu-assoction-server
+    restart: always
+    env_file:
+      - .env
+      - .env.production
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    ports:
+      - '${APP_PORT}:${APP_PORT}'
+    volumes:
+      - ./logs/:${PROJECT_DIR}/logs/
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - sztu-assoction-server_net
+
+networks:
+  sztu-assoction-server_net:
+    name: sztu-assoction-server_net
